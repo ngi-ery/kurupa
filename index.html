@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>くるぱシミュレータ</title>
+<script src="https://code.jquery.com/jquery-1.6.2.min.js"></script>
+<link rel="shortcut icon" href="img/bee01.png" />
+</head>
+<body>
+<style>
+/* CSS定義 */
+html {
+    background-color: #fff;
+}
+body {
+    overflow: hidden;
+    background-color: #fff;
+    padding: 5px 20px 20px;
+}
+#field {
+	position: relative;
+    background-color: #1c1c1c;
+	width: 256px;
+	height: 352px;
+    margin: 0px;
+}
+#panel {
+	position: relative;
+    background-color: #1c1c1c;
+	width: 256px;
+	height: 64px;
+    margin: 00px;
+}
+.field {
+	position: relative;
+	float: left;
+	width: 32px;
+	height: 32px;
+}
+.selected_cell {
+	position: absolute;
+	z-index: 1;
+	border: 3px solid #00ffff;
+	width: 26px;
+	height: 26px;
+}
+.panel_field {
+	position: relative;
+	float: left;
+	width: 32px;
+	height: 32px;
+}
+.selected_panel {
+	position: absolute;
+	z-index: 1;
+	border: 3px solid #00ffff;
+	width: 26px;
+	height: 26px;
+}
+img {
+	position: absolute;
+}
+</style>
+<div class="container">
+
+<script>
+    var X_MAX = 6;
+    var Y_MAX = 9;
+    var PANEL_SIZE = 32;
+
+    // rect（上,右,下,左）
+    var APPLE_0_IMG =  '<img src="img/panel.png" style="left:    0px; top:    0px; clip:rect(  0px,  32px,  32px,   0px);">';
+    var APPLE_1_IMG =  '<img src="img/panel.png" style="left:    0px; top:  -32px; clip:rect( 32px,  32px,  64px,   0px);">';
+    var FISH_0_IMG =   '<img src="img/panel.png" style="left:  -32px; top:    0px; clip:rect(  0px,  64px,  32px,  32px);">';
+    var FISH_1_IMG =   '<img src="img/panel.png" style="left:  -32px; top:  -32px; clip:rect( 32px,  64px,  64px,  32px);">';
+    var FLOG_0_IMG =   '<img src="img/panel.png" style="left:  -64px; top:    0px; clip:rect(  0px,  96px,  32px,  64px);">';
+    var FLOG_1_IMG =   '<img src="img/panel.png" style="left:  -64px; top:  -32px; clip:rect( 32px,  96px,  64px,  64px);">';
+    var BIRD_0_IMG =   '<img src="img/panel.png" style="left:  -96px; top:    0px; clip:rect(  0px, 128px,  32px,  96px);">';
+    var BIRD_1_IMG =   '<img src="img/panel.png" style="left:  -96px; top:  -32px; clip:rect( 32px, 128px,  64px,  96px);">';
+    var BEE_IMG =      '<img src="img/panel.png" style="left: -128px; top:    0px; clip:rect(  0px, 160px,  32px, 128px);">';
+    var NONTAN_IMG =   '<img src="img/panel.png" style="left: -128px; top:  -32px; clip:rect( 32px, 160px,  64px, 128px);">';
+    var NULL_IMG =     '<img src="img/panel.png" style="left: -160px; top:    0px; clip:rect(  0px, 192px,  32px, 160px);">';
+    var CLEAR_IMG =    '<img src="img/panel.png" style="left: -160px; top:  -32px; clip:rect( 32px, 192px,  64px, 160px);">';
+
+    var WALL_TL_IMG =  '<img src="img/panel.png" style="left:    0px; top:  -64px; clip:rect(  64px,  32px,  96px,   0px);">';
+    var WALL_T_IMG =   '<img src="img/panel.png" style="left:  -32px; top:  -64px; clip:rect(  64px,  64px,  96px,   32px);">';
+    var WALL_TR_IMG =  '<img src="img/panel.png" style="left:  -64px; top:  -64px; clip:rect(  64px,  96px,  96px,   64px);">';
+    var WALL_L_IMG =   '<img src="img/panel.png" style="left:    0px; top:  -96px; clip:rect(  96px,  32px, 128px,   0px);">';
+    var WALL_R_IMG =   '<img src="img/panel.png" style="left:  -64px; top:  -96px; clip:rect(  96px,  96px, 128px,   64px);">';
+    var WALL_BL_IMG =  '<img src="img/panel.png" style="left:    0px; top: -128px; clip:rect( 128px,  32px, 160px,   0px);">';
+    var WALL_B_IMG =   '<img src="img/panel.png" style="left:  -32px; top: -128px; clip:rect( 128px,  64px, 160px,   32px);">';
+    var WALL_BR_IMG =  '<img src="img/panel.png" style="left:  -64px; top: -128px; clip:rect( 128px,  96px, 160px,   64px);">';
+
+    var SELECTED_IMG = NULL_IMG;
+
+    function initField()
+    {
+        var $field = $('#field');
+        for(var y = 0; y < Y_MAX + 2; y++)
+        {
+            var $div = $('<div style="position:relative"></div>');
+            for(var x = 0; x < X_MAX + 2; x++)
+            {
+                var $cell = $('<div style="position:relative"></div>');
+                $cell.addClass("field");
+                if(x == 0 && y == 0)
+                {
+                    $cell.addClass("wall-tl");
+                    $cell.append(WALL_TL_IMG);
+                }
+                else if(x == X_MAX+1 && y == 0)
+                {
+                    $cell.addClass("wall-tr");
+                    $cell.append(WALL_TR_IMG);
+                }
+                else if(x == 0 && y == Y_MAX+1)
+                {
+                    $cell.addClass("wall-bl");
+                    $cell.append(WALL_BL_IMG);
+                }
+                else if(x == X_MAX+1 && y == Y_MAX+1)
+                {
+                    $cell.addClass("wall-br");
+                    $cell.append(WALL_BR_IMG);
+                }
+                else if(x == 0)
+                {
+                    $cell.addClass("wall-l");
+                    $cell.append(WALL_L_IMG);
+                }
+                else if(x == X_MAX+1)
+                {
+                    $cell.addClass("wall-r");
+                    $cell.append(WALL_R_IMG);
+                }
+                else if(y == 0)
+                {
+                    $cell.addClass("wall-t");
+                    $cell.append(WALL_T_IMG);
+                }
+                else if(y == Y_MAX+1)
+                {
+                    $cell.addClass("wall-b");
+                    $cell.append(WALL_B_IMG);
+                }
+                else{
+                    $cell.addClass("cell");
+                    $cell.append($('<div class="selected_cell" style="display:none"></div>'));
+                    $cell.append($('<div class="cell_img"></div>'));
+                }
+                $div.append($cell);
+            }
+            $field.append($div);
+        }
+
+        var $cell = $('.cell');
+		$cell.click(function(){
+            $(this).find('.cell_img').html(SELECTED_IMG)
+		});
+        $cell.mouseover(function()
+        {
+            $(this).find('.selected_cell').show();
+        }
+        ).mouseout(function()
+        {
+            $(this).find('.selected_cell').hide();
+        });
+    }
+
+    function initPanel()
+    {
+        var $panels = $('#panel');
+        {
+            var $div = $('<div style="position:relative"></div>');
+            {
+                var $panel = $('<div style="position:relative"></div>');
+                $panel.addClass("panel_field")
+                $panel.append(WALL_TL_IMG);
+                $div.append($panel)
+            }
+            for(var i = 0; i < 6; i++)
+            {
+                var $panel = $('<div style="position:relative"></div>');
+                $panel.addClass("panel_field")
+                $panel.append(WALL_T_IMG);
+                $div.append($panel)
+            }
+            {
+                var $panel = $('<div style="position:relative"></div>');
+                $panel.addClass("panel_field")
+                $panel.append(WALL_TR_IMG);
+                $div.append($panel)
+            }
+            $panels.append($div);
+
+            var $div = $('<div style="position:relative"></div>');
+            {
+                var $panel = $('<div style="position:relative"></div>');
+                $panel.addClass("panel_field")
+                $panel.append(WALL_L_IMG);
+                $div.append($panel)
+            }
+            {
+                var $panel = $('<div style="position:relative" type="1"></div>');
+                $panel.addClass("panel_field")
+                $panel.addClass("panel")
+                $panel.append(APPLE_0_IMG);
+                $div.append($panel)
+                $panel.append($('<div class="selected_panel" style="display:none"></div>'));
+            }
+            {
+                var $panel = $('<div style="position:relative" type="2"></div>');
+                $panel.addClass("panel_field")
+                $panel.addClass("panel")
+                $panel.append(FISH_0_IMG);
+                $div.append($panel)
+                $panel.append($('<div class="selected_panel" style="display:none"></div>'));
+            }
+            {
+                var $panel = $('<div style="position:relative" type="3"></div>');
+                $panel.addClass("panel_field")
+                $panel.addClass("panel")
+                $panel.append(FLOG_0_IMG);
+                $div.append($panel)
+                $panel.append($('<div class="selected_panel" style="display:none"></div>'));
+            }
+            {
+                var $panel = $('<div style="position:relative" type="4"></div>');
+                $panel.addClass("panel_field")
+                $panel.addClass("panel")
+                $panel.append(BIRD_0_IMG);
+                $div.append($panel)
+                $panel.append($('<div class="selected_panel" style="display:none"></div>'));
+            }
+            {
+                var $panel = $('<div style="position:relative" type="5"></div>');
+                $panel.addClass("panel_field")
+                $panel.addClass("panel")
+                $panel.append(BEE_IMG);
+                $div.append($panel)
+                $panel.append($('<div class="selected_panel" style="display:none"></div>'));
+            }
+            {
+                var $panel = $('<div style="position:relative"></div>');
+                $panel.addClass("panel_field")
+                $panel.addClass("panel")
+                $panel.append(NULL_IMG);
+                $div.append($panel)
+                $panel.append($('<div class="selected_panel" style="display:none"></div>'));
+            }
+            {
+                var $panel = $('<div style="position:relative"></div>');
+                $panel.addClass("panel_field")
+                $panel.addClass("panel")
+                $panel.append(WALL_R_IMG);
+                $div.append($panel)
+            }
+            $panels.append($div);
+
+            var $div = $('<div style="position:relative"></div>');
+            {
+                var $panel = $('<div style="position:relative"></div>');
+                $panel.addClass("panel_field")
+                $panel.append(WALL_L_IMG);
+                $div.append($panel)
+            }
+            {
+                var $panel = $('<div style="position:relative" type="6"></div>');
+                $panel.addClass("panel_field")
+                $panel.addClass("panel")
+                $panel.append(APPLE_1_IMG);
+                $div.append($panel)
+                $panel.append($('<div class="selected_panel" style="display:none"></div>'));
+            }
+            {
+                var $panel = $('<div style="position:relative" type="7"></div>');
+                $panel.addClass("panel_field")
+                $panel.addClass("panel")
+                $panel.append(FISH_1_IMG);
+                $div.append($panel)
+                $panel.append($('<div class="selected_panel" style="display:none"></div>'));
+            }
+            {
+                var $panel = $('<div style="position:relative" type="8"></div>');
+                $panel.addClass("panel_field")
+                $panel.addClass("panel")
+                $panel.append(FLOG_1_IMG);
+                $div.append($panel)
+                $panel.append($('<div class="selected_panel" style="display:none"></div>'));
+            }
+            {
+                var $panel = $('<div style="position:relative" type="9"></div>');
+                $panel.addClass("panel_field")
+                $panel.addClass("panel")
+                $panel.append(BIRD_1_IMG);
+                $div.append($panel)
+                $panel.append($('<div class="selected_panel" style="display:none"></div>'));
+            }
+            {
+                var $panel = $('<div style="position:relative" type="10"></div>');
+                $panel.addClass("panel_field")
+                $panel.addClass("panel")
+                $panel.append(NONTAN_IMG);
+                $div.append($panel)
+                $panel.append($('<div class="selected_panel" style="display:none"></div>'));
+            }
+            {
+                var $panel = $('<div style="position:relative" type="11"></div>');
+                $panel.addClass("panel_field")
+                $panel.addClass("panel")
+                $panel.append(CLEAR_IMG);
+                $div.append($panel)
+                $panel.append($('<div class="selected_panel" style="display:none"></div>'));
+            }
+            {
+                var $panel = $('<div style="position:relative"></div>');
+                $panel.addClass("panel_field")
+                $panel.append(WALL_R_IMG);
+                $div.append($panel)
+            }
+            $panels.append($div);
+
+            var $div = $('<div style="position:relative"></div>');
+            {
+                var $panel = $('<div style="position:relative"></div>');
+                $panel.addClass("panel_field")
+                $panel.append(WALL_BL_IMG);
+                $div.append($panel)
+            }
+            for(var i = 0; i < 6; i++)
+            {
+                var $panel = $('<div style="position:relative"></div>');
+                $panel.addClass("panel_field")
+                $panel.append(WALL_B_IMG);
+                $div.append($panel)
+            }
+            {
+                var $panel = $('<div style="position:relative"></div>');
+                $panel.addClass("panel_field")
+                $panel.append(WALL_BR_IMG);
+                $div.append($panel)
+            }
+            $panels.append($div);
+
+
+        }
+
+        var $panel = $('.panel');
+		$panel.click(function(){
+            var $type = parseInt($(this).attr('type'));
+            if ($type == 11)
+            {
+                $('.cell_img').html(NULL_IMG);
+            }
+            else
+            {
+                $('.panel').find('.selected_panel').hide();
+                switch ($type) {
+                case 1:
+                    SELECTED_IMG = APPLE_0_IMG;
+                    break;
+                case 2:
+                    SELECTED_IMG = FISH_0_IMG;
+                    break;
+                case 3:
+                    SELECTED_IMG = FLOG_0_IMG;
+                    break;
+                case 4:
+                    SELECTED_IMG = BIRD_0_IMG;
+                    break;
+                case 5:
+                    SELECTED_IMG = BEE_IMG;
+                    break;
+                case 6:
+                    SELECTED_IMG = APPLE_1_IMG;
+                    break;
+                case 7:
+                    SELECTED_IMG = FISH_1_IMG;
+                    break;
+                case 8:
+                    SELECTED_IMG = FLOG_1_IMG;
+                    break;
+                case 9:
+                    SELECTED_IMG = BIRD_1_IMG;
+                    break;
+                case 10:
+                    SELECTED_IMG = NONTAN_IMG;
+                    break;
+                default:
+                    SELECTED_IMG = NULL_IMG;
+                    break;
+            }
+            $(this).find('.selected_panel').show();   
+            }
+		});
+    }
+</script>
+
+<script>
+    jQuery(function($)
+    {
+        initField();
+        initPanel();
+    });
+</script>
+
+
+
+<h1>くるぱシミュレータ</h1>
+
+<div id="field"></div>
+<div id="panel"></div>
+
+</div>
+</body>
+</html>
