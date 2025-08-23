@@ -155,7 +155,13 @@ img {
 
         var $cell = $('.cell');
 		$cell.click(function(){
-            $(this).find('.cell_img').html(SELECTED_IMG)
+            var $cellImg = $(this).find('.cell_img');
+            $cellImg.empty();
+
+            // Create a container div to enforce clipping
+            var $container = $('<div style="width:32px; height:32px; overflow:hidden; position:relative;"></div>');
+            $container.append($(SELECTED_IMG));
+            $cellImg.append($container);
 		});
         $cell.mouseover(function()
         {
@@ -416,12 +422,61 @@ img {
 		});
     }
 </script>
-
+<script src="https://unpkg.com/html-to-image@1.11.10/dist/html-to-image.js"></script>
 <script>
     jQuery(function($)
     {
         initField();
         initPanel();
+
+        $('#downloadBtn').click(function() {
+            var cropX = 33;    // pixels from left
+            var cropY = 36;    // pixels from top
+            var cropWidth = 314;   // width of area to capture
+            var cropHeight = 456;  // height of area to capture
+            var cornerSize = 3;
+
+            // Timestamp helper
+            var now = new Date();
+            var pad = n => n.toString().padStart(2,'0');
+            var timestamp = pad(now.getMonth()+1) + pad(now.getDate()) + now.getFullYear() + '-' +
+                            pad(now.getHours()) + pad(now.getMinutes()) + pad(now.getSeconds());
+
+            htmlToImage.toPng(document.getElementById('field'), {
+                filter: node => node.style.display !== 'none' // ignore hidden elements
+            })
+            .then(function(dataUrl) {
+                var img = new Image();
+                img.src = dataUrl;
+                img.onload = function() {
+                    // Create a canvas for the cropped area
+                    var canvas = document.createElement('canvas');
+                    canvas.width = cropWidth;
+                    canvas.height = cropHeight;
+                    var ctx = canvas.getContext('2d');
+
+                    // Draw only the desired portion
+                    ctx.drawImage(img, cropX, cropY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
+
+                    // Clear the coners
+                    ctx.clearRect(0, 0, cornerSize, cornerSize);
+                    ctx.clearRect(cropWidth - cornerSize, 0, cornerSize, cornerSize);
+                    ctx.clearRect(0, cropHeight - cornerSize, cornerSize, cornerSize);
+                    ctx.clearRect(cropWidth - cornerSize, cropHeight - cornerSize, cornerSize, cornerSize);
+
+                    // Convert to PNG and trigger download
+                    var link = document.createElement('a');
+                    link.href = canvas.toDataURL('image/png');
+                    link.download = 'kurupasim-' + timestamp + '.png';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                }
+            })
+            .catch(function(error){
+                console.error('Error generating image:', error);
+            });
+        });
     });
 </script>
 
@@ -430,6 +485,9 @@ img {
 <div id="area" style="padding: 10px; width: 256px;height: 342px;">
     <div id="field"></div>
     <div id="panel"></div>
+</div>
+<div id="download-container" style="margin-top:10px;">
+    <img id="downloadBtn" src="img/kuma.png" style="cursor:pointer; width:48px; height:48px;" alt="Download Screenshot" title="Screenshot">
 </div>
 </div>
 </body>
