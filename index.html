@@ -91,6 +91,8 @@ img {
     var WALL_B_IMG =   '<img src="img/panel.png" style="left:  -32px; top: -128px; clip:rect( 128px,  64px, 160px,   32px);">';
     var WALL_BR_IMG =  '<img src="img/panel.png" style="left:  -64px; top: -128px; clip:rect( 128px,  96px, 160px,   64px);">';
 
+    var TOP_LINE_IMG = '<img src="img/panel.png" style="left:  -32px; top: -132px; clip:rect( 132px,  64px, 134px,   30px);">';
+
     var SELECTED_IMG = NULL_IMG;
 
     function initField()
@@ -165,6 +167,27 @@ img {
         {
             $(this).find('.selected_cell').hide();
         });
+        
+        var $field = $('#field');
+
+        // add the top line to the background after the grid has been created
+        var lineTop = 3 * 32;
+        var colors = ['#c6c729', '#c6c729'];
+
+        for (var i = 0; i < colors.length; i++) {
+            var $line = $('<div></div>');
+            $line.css({
+                position: 'absolute',
+                top: (lineTop + i) + 'px',
+                left: '30px',
+                width: '194px',
+                height: '1px',
+                backgroundColor: colors[i],
+                pointerEvents: 'none', // so clicks pass through
+                zIndex: 0 // behind all cell content
+            });
+            $field.append($line);
+        }
     }
 
     function initPanel()
