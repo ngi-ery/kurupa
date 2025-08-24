@@ -85,7 +85,8 @@ img {
     var WALL_TL_IMG =  '<img src="img/panel.png" style="left:    0px; top:  -64px; clip:rect(  64px,  32px,  96px,   0px);">';
     var WALL_T_IMG =   '<img src="img/panel.png" style="left:  -32px; top:  -64px; clip:rect(  64px,  64px,  96px,   32px);">';
     var WALL_TR_IMG =  '<img src="img/panel.png" style="left:  -64px; top:  -64px; clip:rect(  64px,  96px,  96px,   64px);">';
-    var WALL_L_IMG =   '<img src="img/panel.png" style="left:    0px; top:  -96px; clip:rect(  96px,  32px, 128px,   0px);">';
+    var WALL_L_IMG =   '<img src="img/panel.png" style="left:    0px; top:  -96px; clip:rect(  96px,  30px, 128px,   0px);">';
+    var PANEL_WALL_L_IMG =   '<img src="img/panel.png" style="left:    0px; top:  -96px; clip:rect(  96px,  32px, 128px,   0px);">';
     var WALL_R_IMG =   '<img src="img/panel.png" style="left:  -64px; top:  -96px; clip:rect(  96px,  96px, 128px,   64px);">';
     var WALL_BL_IMG =  '<img src="img/panel.png" style="left:    0px; top: -128px; clip:rect( 128px,  32px, 160px,   0px);">';
     var WALL_B_IMG =   '<img src="img/panel.png" style="left:  -32px; top: -128px; clip:rect( 128px,  64px, 160px,   32px);">';
@@ -288,7 +289,7 @@ img {
             {
                 var $panel = $('<div style="position:relative"></div>');
                 $panel.addClass("panel_field")
-                $panel.append(WALL_L_IMG);
+                $panel.append(PANEL_WALL_L_IMG);
                 $div.append($panel)
             }
             {
