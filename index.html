@@ -486,6 +486,14 @@ img {
 
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+                    
+                    // clear the corners (optional)
+                    const cw = canvas.width;
+                    const ch = canvas.height;
+                    ctx.clearRect(0, 0, cornerSize, cornerSize);
+                    ctx.clearRect(cw - cornerSize, 0, cornerSize, cornerSize);
+                    ctx.clearRect(0, ch - cornerSize, cornerSize, cornerSize);
+                    ctx.clearRect(cw - cornerSize, ch - cornerSize, cornerSize, cornerSize);
 
                     // Convert to PNG and trigger download
                     var link = document.createElement('a');
