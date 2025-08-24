@@ -430,39 +430,62 @@ img {
         initPanel();
 
         $('#downloadBtn').click(function() {
-            var cropX = 33;    // pixels from left
+            /**var cropX = 33;    // pixels from left
             var cropY = 36;    // pixels from top
             var cropWidth = 314;   // width of area to capture
             var cropHeight = 456;  // height of area to capture
-            var cornerSize = 3;
+            var cornerSize = 3;**/
+
+            var field = document.getElementById('field');
+            var rect = field.getBoundingClientRect(); // get size of the field
+
+            // Define crop values as percentages (0.0 – 1.0)
+            // browser, full field is 384x528
+            var cropXPct = 0.0859375;   
+            var cropYPct = 0.0681818181818182;   
+            var cropWidthPct = 0.8177083333333333;  
+            var cropHeightPct = 0.8636363636363636;
+
+            // Convert percentages to pixels
+            var cropX = Math.floor(rect.width * cropXPct);
+            var cropY = Math.floor(rect.height * cropYPct);
+            var cropWidth = Math.floor(rect.width * cropWidthPct);
+            var cropHeight = Math.floor(rect.height * cropHeightPct);
+            var cornerSize = 3; // ???
 
             // Timestamp helper
             var now = new Date();
             var pad = n => n.toString().padStart(2,'0');
             var timestamp = pad(now.getMonth()+1) + pad(now.getDate()) + now.getFullYear() + '-' +
                             pad(now.getHours()) + pad(now.getMinutes()) + pad(now.getSeconds());
-
-            htmlToImage.toPng(document.getElementById('field'), {
-                filter: node => node.style.display !== 'none' // ignore hidden elements
+                            
+            htmlToImage.toPng(field, {
+                filter: node => node.style.display !== 'none'
             })
             .then(function(dataUrl) {
                 var img = new Image();
                 img.src = dataUrl;
                 img.onload = function() {
-                    // Create a canvas for the cropped area
-                    var canvas = document.createElement('canvas');
-                    canvas.width = cropWidth;
-                    canvas.height = cropHeight;
-                    var ctx = canvas.getContext('2d');
 
-                    // Draw only the desired portion
-                    ctx.drawImage(img, cropX, cropY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
+                    //scale factors from CSS px -> image px
+                    const scaleX = img.width  / rect.width;
+                    const scaleY = img.height / rect.height;
 
-                    // Clear the coners
-                    ctx.clearRect(0, 0, cornerSize, cornerSize);
-                    ctx.clearRect(cropWidth - cornerSize, 0, cornerSize, cornerSize);
-                    ctx.clearRect(0, cropHeight - cornerSize, cornerSize, cornerSize);
-                    ctx.clearRect(cropWidth - cornerSize, cropHeight - cornerSize, cornerSize, cornerSize);
+                    const sx = Math.round(cropX * scaleX);
+                    const sy = Math.round(cropY * scaleY);
+                    const sw = Math.round(cropWidth  * scaleX);
+                    const sh = Math.round(cropHeight * scaleY);
+
+                    const canvas = document.createElement('canvas');
+                    
+                    //canvas.width  = cropWidth;
+                    //canvas.height = cropHeight;
+
+                    canvas.width  = sw;
+                    canvas.height = sh;
+
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
 
                     // Convert to PNG and trigger download
                     var link = document.createElement('a');
@@ -470,7 +493,7 @@ img {
                     link.download = 'kurupasim-' + timestamp + '.png';
                     document.body.appendChild(link);
                     link.click();
-                    document.body.removeChild(link);
+                    document.body.removeChild(link);                    
                 }
             })
             .catch(function(error){
